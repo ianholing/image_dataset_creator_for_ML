@@ -9,7 +9,8 @@ import sys, os
 import json
 
 class GoogleImageSpider:
-    ActualImages=[]    # Contains the link for Large original images, type of  image
+    debug = False
+    actual_images=[]    # Contains the link for Large original images, type of  image
     http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
     header = {         # Headers emulation of a usual browser (My use case: Chrome in linux)
 #        'accept-encoding': 'gzip, deflate, br',
@@ -24,9 +25,10 @@ class GoogleImageSpider:
         'x-client-data': 'CI22yQEIorbJAQitmMoBCPqcygEIqZ3KAQioo8oB'
     }
     
-    def __init__(self):
-        self.ActualImages=[]
+    def __init__(self, debug = False):
+        self.actual_images=[]
         self.http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
+        self.debug = debug
 
     def get_html(self, keyword):
         url = "https://www.google.es/search?q="+keyword+"&source=lnms&tbm=isch"
@@ -47,30 +49,31 @@ ahUKEwjZt8HGqenYAhWDSBQKHRM0DFsQuT0I6AEoAQ&ijn=2&start='+str(offset)+'&asearch=i
         return BeautifulSoup(page, 'html.parser')
 
     def get_images_from_html(self, html, limit=1000):
-        size = len(self.ActualImages)
+        size = len(self.actual_images)
         for a in html.find_all("div",{"class":"rg_meta"}):
             link , Type =json.loads(a.text)["ou"]  ,json.loads(a.text)["ity"]
-            self.ActualImages.append((link,Type))
+            self.actual_images.append((link,Type))
             limit -= 1
             if (limit == 0):
                 break
-        print ("Images added: ", len(self.ActualImages)-size)
+        if self.debug:
+            print ("Images added: ", len(self.actual_images)-size)
             
     def save_images(self, prefix, path):
         if not os.path.exists(path):
             os.mkdir(path)
         
         chunk_size = 1024
-        for i in range(len(self.ActualImages)):
+        for i in range(len(self.actual_images)):
             try:
-                url_image = parse_url(self.ActualImages[i][0])
+                url_image = parse_url(self.actual_images[i][0])
                 url_image = url_image.url
-#                url_image = self.ActualImages[i][0].split('?')[0]
-#                print (i, url_image, self.ActualImages[i][1])
+#                url_image = self.actual_images[i][0].split('?')[0]
+#                print (i, url_image, self.actual_images[i][1])
                 r = self.http.request('GET', url_image, preload_content=False, timeout=5.0)
                 filename = "./"+path+"/"+str(prefix)+str(i)
-                if self.ActualImages[i][1] != "":
-                    filename += '.'+self.ActualImages[i][1]
+                if self.actual_images[i][1] != "":
+                    filename += '.'+self.actual_images[i][1]
                 with open(filename, 'wb') as out:
                     while True:
                         data = r.read(chunk_size)
@@ -79,13 +82,13 @@ ahUKEwjZt8HGqenYAhWDSBQKHRM0DFsQuT0I6AEoAQ&ijn=2&start='+str(offset)+'&asearch=i
                         out.write(data)
                 r.release_conn()
                 
-                if self.ActualImages[i][1] == "":
+                if self.actual_images[i][1] == "":
 #                    print ("Detecting type:", imghdr.what(filename))
                     os.rename(filename, filename+"."+imghdr.what(filename))
             except:
                 print ("Something goes wrong trying to save image: ", sys.exc_info()[0])
                 
-        print (len(self.ActualImages), "Images saved to: ", path)
+        print (len(self.actual_images), "images saved to: ", path)
             
     def get_images(self, keyword, how_many):
         parsed_keyword = keyword.split()
@@ -100,4 +103,4 @@ ahUKEwjZt8HGqenYAhWDSBQKHRM0DFsQuT0I6AEoAQ&ijn=2&start='+str(offset)+'&asearch=i
                 self.get_images_from_html(html, limit=how_many-i)
         
     def clear(self):
-        self.ActualImages=[]
+        self.actual_images=[]
