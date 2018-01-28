@@ -102,5 +102,5 @@ ahUKEwjZt8HGqenYAhWDSBQKHRM0DFsQuT0I6AEoAQ&ijn=2&start='+str(offset)+'&asearch=i
                 html = self.get_more_html(parsed_keyword, i)
                 self.get_images_from_html(html, limit=how_many-i)
         
-    def clear(self):
+    def clear(self, delete=False):    
         self.actual_images=[]
