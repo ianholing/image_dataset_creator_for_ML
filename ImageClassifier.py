@@ -36,13 +36,14 @@ class ImageClassifier:
     max_pool_lost = 2
     
     def __init__(self, good_path, bad_path, img_size, \
-                 batch_size=60, training_epochs=2000, debug=False):
+                 batch_size=60, training_epochs=2000, test_batch_percentage=0.1, debug=False):
         self.good_path = good_path
         self.bad_path = bad_path
         self.debug = debug
         self.img_size = img_size
         self.batch_size = batch_size
         self.training_epochs = training_epochs
+        self.test_batch_percentage = test_batch_percentage
         
         # It can be inception without training
         if good_path == None or bad_path == None:
@@ -192,6 +193,8 @@ class ImageClassifier:
     def run(self, source_path, good_path, bad_path, batch_size=60, good_percent_treshold=50, delete_images=False):
         if not os.path.exists(source_path):
             raise ValueError('The source for already normalized images path not found.')
+        if not os.path.exists(source_path):
+            os.makedirs(source_path)
         if not os.path.exists(good_path):
             os.makedirs(good_path)
         if not os.path.exists(bad_path):
@@ -205,7 +208,12 @@ class ImageClassifier:
             if os.path.isdir(filename):
                 continue
                 
-            img = mpimg.imread(filename)
+            try:
+                img = mpimg.imread(filename)
+            except:
+                print ("Unloadable image: " + filename)
+                continue
+                
             image_0 = np.resize(img,(1, self.img_size, self.img_size, 3))
             _, result = self.sess.run(["input:0", y_conv], feed_dict= {x:image_0, "p_keep_conv:0": 1.0, "p_keep_hidden:0": 1.0})
             is_good_image = (np.argmax(result[0]) == 0)

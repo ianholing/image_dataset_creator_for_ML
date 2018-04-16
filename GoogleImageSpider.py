@@ -64,6 +64,7 @@ ahUKEwjZt8HGqenYAhWDSBQKHRM0DFsQuT0I6AEoAQ&ijn=2&start='+str(offset)+'&asearch=i
             os.mkdir(path)
         
         chunk_size = 1024
+        print ("Saving", len(self.actual_images), "images..")
         for i in range(len(self.actual_images)):
             try:
                 url_image = parse_url(self.actual_images[i][0])
