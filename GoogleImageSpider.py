@@ -7,6 +7,7 @@ import imghdr
 import re
 import sys, os
 import json
+import hashlib
 
 class GoogleImageSpider:
     debug = False
@@ -65,16 +66,18 @@ ahUKEwjZt8HGqenYAhWDSBQKHRM0DFsQuT0I6AEoAQ&ijn=2&start='+str(offset)+'&asearch=i
         
         chunk_size = 1024
         print ("Saving", len(self.actual_images), "images..")
+        filename = ""
         for i in range(len(self.actual_images)):
             try:
                 url_image = parse_url(self.actual_images[i][0])
                 url_image = url_image.url
+                file_extension = self.actual_images[i][1]
 #                url_image = self.actual_images[i][0].split('?')[0]
-#                print (i, url_image, self.actual_images[i][1])
+#                print (i, url_image, file_extension)
                 r = self.http.request('GET', url_image, preload_content=False, timeout=5.0)
                 filename = "./"+path+"/"+str(prefix)+str(i)
-                if self.actual_images[i][1] != "":
-                    filename += '.'+self.actual_images[i][1]
+                if file_extension != "":
+                    filename += '.'+file_extension
                 with open(filename, 'wb') as out:
                     while True:
                         data = r.read(chunk_size)
@@ -83,11 +86,15 @@ ahUKEwjZt8HGqenYAhWDSBQKHRM0DFsQuT0I6AEoAQ&ijn=2&start='+str(offset)+'&asearch=i
                         out.write(data)
                 r.release_conn()
                 
-                if self.actual_images[i][1] == "":
-#                    print ("Detecting type:", imghdr.what(filename))
-                    os.rename(filename, filename+"."+imghdr.what(filename))
-            except:
-                print ("Something goes wrong trying to save image: ", sys.exc_info()[0])
+                # HASH AND GET REAL FILETYPE
+                filehash = self.file_hash(filename)
+                if file_extension == "":
+                    file_extension = imghdr.what(filename)
+                    if file_extension is None:
+                        file_extension = ""
+                os.rename(filename, path+"/"+filehash+"."+file_extension)
+            except Exception as e:
+                print ("Error saving image: ", filename, "\nError:", e)
                 
         print (len(self.actual_images), "images saved to: ", path)
             
@@ -103,5 +110,12 @@ ahUKEwjZt8HGqenYAhWDSBQKHRM0DFsQuT0I6AEoAQ&ijn=2&start='+str(offset)+'&asearch=i
                 html = self.get_more_html(parsed_keyword, i)
                 self.get_images_from_html(html, limit=how_many-i)
         
-    def clear(self, delete=False):    
+    def clear(self, delete=False):
         self.actual_images=[]
+
+    def file_hash(self, filename):
+        h = hashlib.sha256()
+        with open(filename, 'rb', buffering=0) as f:
+            for b in iter(lambda : f.read(128*1024), b''):
+                h.update(b)
+        return h.hexdigest()
