@@ -9,6 +9,7 @@ import random
 import time
 import shutil
 import sys, os
+import hashlib
 
 class ImageClassifier:
     good_path = None
@@ -225,9 +226,10 @@ class ImageClassifier:
             # GET THE CORRECT FILENAME
             percent = int(result[0][np.argmax(result)]*100)
             fname, fextension = os.path.splitext(image_path)
-            final_filename = fname +"_"+ str(percent) +"_GOOD."+ fextension
+            filehash = self.file_hash(filename)
+            final_filename = filehash +"_"+ str(percent) +"_GOOD"+ fextension
             if not is_good_image:
-                final_filename = fname +"_"+ str(percent) +"_BAD."+ fextension
+                final_filename = filehash +"_"+ str(percent) +"_BAD"+ fextension
             
             # MOVE TO CORRECT PATH
             final_path = bad_path +"/"+ final_filename
@@ -320,3 +322,10 @@ class ImageClassifier:
         output_layer = tf.add(tf.matmul(FC_layer, W['wsm']), b['bsm'], name="output")
 
         return output_layer
+    
+    def file_hash(self, filename):
+        h = hashlib.sha256()
+        with open(filename, 'rb', buffering=0) as f:
+            for b in iter(lambda : f.read(128*1024), b''):
+                h.update(b)
+        return h.hexdigest()
