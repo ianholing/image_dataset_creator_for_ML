@@ -11,9 +11,10 @@ The tools I created are:
 * **ImageClassifier.py**: Last but not least, an CNN implementing an image classifier in order to tag "GOOD" and "BAD" images with two or tree simples lines of code.
 
 ## Examples
-This is an example of how this works trying to create a pokemon dataset: [Pokemon dataset example](https://github.com/ianholing/image_dataset_creator_for_ML/blob/master/get_them_all.ipynb)
+here are some examples about how all this works trying to create datasets
 
-And how the final result will be:
+[Pokemon dataset example](https://github.com/ianholing/image_dataset_creator_for_ML/blob/master/get_them_all.ipynb) and how the final result will be:
 ![FINAL DATASET 1](git_images/final_dataset_demo_1.png)
 
+And this another one for trump faces at [trump faces dataset](https://github.com/ianholing/image_dataset_creator_for_ML/blob/master/trump_pictures_dataset.ipynb):
 ![FINAL DATASET 2](git_images/trump_dataset.png)
